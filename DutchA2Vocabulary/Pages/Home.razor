@@ -1,0 +1,164 @@
+@page "/"
+@using DutchA2Vocabulary.Data
+@using DutchA2Vocabulary.Models
+
+<PageTitle>Dutch A2 Vocabulary</PageTitle>
+
+<div class="fc-app" tabindex="0" @ref="_container" @onkeydown="OnKeyDown" @onkeydown:preventDefault="_preventKeys">
+    <div class="fc-header">
+        <h1>Dutch A2 – Lezen Vocabulary</h1>
+        <span class="fc-counter">@(_index + 1) / @_deck.Count</span>
+    </div>
+
+    <div class="fc-pills">
+        <button class="fc-pill @(_selectedCategory == string.Empty ? "active" : "")" @onclick="() => SelectCategoryAsync(string.Empty)">
+            All <span class="fc-pill-count">@WordData.All.Count</span>
+        </button>
+        @foreach (var cat in _categories)
+        {
+            <button class="fc-pill @(_selectedCategory == cat.Name ? "active" : "")" @onclick="() => SelectCategoryAsync(cat.Name)">
+                @cat.Name <span class="fc-pill-count">@cat.Count</span>
+            </button>
+        }
+    </div>
+
+    <div class="fc-card @(_flipped ? "flipped" : "")" @onclick="Flip" role="button" aria-label="Flashcard – click to flip">
+        <div class="fc-inner">
+            <div class="fc-front">
+                <span class="fc-category">@CurrentWord.Category</span>
+                <span class="fc-word">@CurrentWord.Dutch</span>
+                <span class="fc-hint">click to reveal translation</span>
+            </div>
+            <div class="fc-back">
+                <span class="fc-category">@CurrentWord.Category</span>
+                <span class="fc-word-en">@CurrentWord.English</span>
+                <span class="fc-dutch-small">@CurrentWord.Dutch</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="fc-controls">
+        <button class="btn btn-secondary" @onclick="PrevAsync" disabled="@(_index == 0)">&#8592; Prev</button>
+        <button class="btn btn-outline-primary" @onclick="ShuffleAsync">&#x21BA; Shuffle</button>
+        <button class="btn btn-secondary" @onclick="NextAsync" disabled="@(_index == _deck.Count - 1)">Next &#8594;</button>
+    </div>
+
+    <div class="fc-progress">
+        <div class="fc-progress-bar" style="width: @((_index + 1) * 100.0 / _deck.Count)%"></div>
+    </div>
+</div>
+
+@code {
+    private record CategoryInfo(string Name, int Count);
+
+    private List<WordEntry> _deck = new();
+    private List<CategoryInfo> _categories = new();
+    private string _selectedCategory = "";
+    private int _index;
+    private bool _flipped;
+    private bool _preventKeys;
+    private ElementReference _container;
+
+    private WordEntry CurrentWord => _deck[_index];
+
+    protected override void OnInitialized()
+    {
+        _categories = WordData.All
+            .GroupBy(w => w.Category)
+            .Select(g => new CategoryInfo(g.Key, g.Count()))
+            .ToList();
+        _deck = WordData.All.ToList();
+    }
+
+    private async Task SelectCategoryAsync(string category)
+    {
+        _selectedCategory = category;
+        _deck = string.IsNullOrEmpty(_selectedCategory)
+            ? WordData.All.ToList()
+            : WordData.All.Where(w => w.Category == _selectedCategory).ToList();
+        _index = 0;
+        _flipped = false;
+        await _container.FocusAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await _container.FocusAsync();
+    }
+
+    private void Flip()
+    {
+        _flipped = !_flipped;
+    }
+
+    private void Next()
+    {
+        if (_index < _deck.Count - 1)
+        {
+            _index++;
+            _flipped = false;
+        }
+    }
+
+    private async Task NextAsync()
+    {
+        Next();
+        await _container.FocusAsync();
+    }
+
+    private void Prev()
+    {
+        if (_index > 0)
+        {
+            _index--;
+            _flipped = false;
+        }
+    }
+
+    private async Task PrevAsync()
+    {
+        Prev();
+        await _container.FocusAsync();
+    }
+
+    private void Shuffle()
+    {
+        var list = _deck;
+        for (int i = list.Count - 1; i > 0; i--)
+        {
+            int j = Random.Shared.Next(i + 1);
+            (list[i], list[j]) = (list[j], list[i]);
+        }
+        _index = 0;
+        _flipped = false;
+    }
+
+    private async Task ShuffleAsync()
+    {
+        Shuffle();
+        await _container.FocusAsync();
+    }
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        _preventKeys = e.Key is "ArrowUp" or "ArrowDown" or "ArrowLeft" or "ArrowRight" or " ";
+        switch (e.Key)
+        {
+            case "ArrowUp":
+            case "ArrowDown":
+            case "Enter":
+                Flip();
+                break;
+            case "ArrowRight":
+                Next();
+                break;
+            case "ArrowLeft":
+                Prev();
+                break;
+            case " ":
+                Shuffle();
+                break;
+        }
+    }
+}
