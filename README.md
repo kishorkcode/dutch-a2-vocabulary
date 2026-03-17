@@ -1,8 +1,8 @@
+# 👉 **Live App available at:** https://kishorkcode.github.io/dutch-a2-vocabulary/
+
 # Dutch A2 Vocabulary Flashcards
 
 A browser-based flashcard app for studying Dutch vocabulary at the A2 / *inburgering lezen* (civic integration reading) level. Built with **Blazor WebAssembly** — no server required, runs entirely in the browser.
-
-**Live App:** https://kishorkcode.github.io/dutch-a2-vocabulary/
 
 ## Features
 
