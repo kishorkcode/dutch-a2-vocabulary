@@ -94,6 +94,47 @@ main {
     white-space: nowrap;
 }
 
+/* ── Exam type tabs ──────────────────────────────────── */
+.fc-exam-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.fc-exam-tab {
+    flex: 1;
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    border: 2px solid #dee2e6;
+    background: #ffffff;
+    color: #495057;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.fc-exam-tab:hover {
+    border-color: #0d6efd;
+    color: #0d6efd;
+    background: #f0f5ff;
+}
+
+.fc-exam-tab.active {
+    background: #0d6efd;
+    border-color: #0d6efd;
+    color: #ffffff;
+}
+
+.fc-exam-tab.active .fc-pill-count {
+    background: rgba(255,255,255,0.25);
+    color: #ffffff;
+}
+
 /* ── Category pill filters ───────────────────────────── */
 .fc-pills {
     display: flex;

@@ -6,13 +6,22 @@
 
 <div class="fc-app" tabindex="0" @ref="_container" @onkeydown="OnKeyDown" @onkeydown:preventDefault="_preventKeys">
     <div class="fc-header">
-        <h1>Dutch A2 – Lezen Vocabulary</h1>
+        <h1>Dutch A2 – @(_examType == "Reading" ? "Lezen" : "Luisteren") Vocabulary</h1>
         <span class="fc-counter">@(_index + 1) / @_deck.Count</span>
+    </div>
+
+    <div class="fc-exam-tabs">
+        <button class="@("fc-exam-tab" + (_examType == "Reading" ? " active" : ""))" @onclick="SelectReadingAsync">
+            📚 Lezen (Reading) <span class="fc-pill-count">@WordData.Reading.Count</span>
+        </button>
+        <button class="@("fc-exam-tab" + (_examType == "Listening" ? " active" : ""))" @onclick="SelectListeningAsync">
+            🎙️ Luisteren (Listening) <span class="fc-pill-count">@WordData.Listening.Count</span>
+        </button>
     </div>
 
     <div class="fc-pills">
         <button class="fc-pill @(_selectedCategory == string.Empty ? "active" : "")" @onclick="() => SelectCategoryAsync(string.Empty)">
-            All <span class="fc-pill-count">@WordData.All.Count</span>
+            All <span class="fc-pill-count">@_baseWords.Count</span>
         </button>
         @foreach (var cat in _categories)
         {
@@ -52,7 +61,9 @@
     private record CategoryInfo(string Name, int Count);
 
     private List<WordEntry> _deck = new();
+    private List<WordEntry> _baseWords = new();
     private List<CategoryInfo> _categories = new();
+    private string _examType = "Reading";
     private string _selectedCategory = "";
     private int _index;
     private bool _flipped;
@@ -63,19 +74,38 @@
 
     protected override void OnInitialized()
     {
-        _categories = WordData.All
+        RebuildBase();
+    }
+
+    private void RebuildBase()
+    {
+        _baseWords = _examType == "Listening" ? WordData.Listening : WordData.Reading;
+        _categories = _baseWords
             .GroupBy(w => w.Category)
             .Select(g => new CategoryInfo(g.Key, g.Count()))
             .ToList();
-        _deck = WordData.All.ToList();
+        _selectedCategory = string.Empty;
+        _deck = _baseWords.ToList();
+        _index = 0;
+        _flipped = false;
     }
+
+    private async Task SelectExamTypeAsync(string examType)
+    {
+        _examType = examType;
+        RebuildBase();
+        await _container.FocusAsync();
+    }
+
+    private Task SelectReadingAsync() => SelectExamTypeAsync("Reading");
+    private Task SelectListeningAsync() => SelectExamTypeAsync("Listening");
 
     private async Task SelectCategoryAsync(string category)
     {
         _selectedCategory = category;
         _deck = string.IsNullOrEmpty(_selectedCategory)
-            ? WordData.All.ToList()
-            : WordData.All.Where(w => w.Category == _selectedCategory).ToList();
+            ? _baseWords.ToList()
+            : _baseWords.Where(w => w.Category == _selectedCategory).ToList();
         _index = 0;
         _flipped = false;
         await _container.FocusAsync();
