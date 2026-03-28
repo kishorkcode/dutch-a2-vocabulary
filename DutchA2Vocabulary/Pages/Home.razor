@@ -1,6 +1,7 @@
 @page "/"
 @using DutchA2Vocabulary.Data
 @using DutchA2Vocabulary.Models
+@inject IJSRuntime JS
 
 <PageTitle>Dutch A2 Vocabulary</PageTitle>
 
@@ -37,11 +38,13 @@
                 <span class="fc-category">@CurrentWord.Category</span>
                 <span class="fc-word">@CurrentWord.Dutch</span>
                 <span class="fc-hint">click to reveal translation</span>
+                <button class="fc-speak-btn" @onclick="SpeakAsync" @onclick:stopPropagation title="Pronounce (P)" aria-label="Pronounce Dutch word">🔊</button>
             </div>
             <div class="fc-back">
                 <span class="fc-category">@CurrentWord.Category</span>
                 <span class="fc-word-en">@CurrentWord.English</span>
                 <span class="fc-dutch-small">@CurrentWord.Dutch</span>
+                <button class="fc-speak-btn" @onclick="SpeakAsync" @onclick:stopPropagation title="Pronounce (P)" aria-label="Pronounce Dutch word">🔊</button>
             </div>
         </div>
     </div>
@@ -170,7 +173,7 @@
         await _container.FocusAsync();
     }
 
-    private void OnKeyDown(KeyboardEventArgs e)
+    private async Task OnKeyDown(KeyboardEventArgs e)
     {
         _preventKeys = e.Key is "ArrowUp" or "ArrowDown" or "ArrowLeft" or "ArrowRight" or " ";
         switch (e.Key)
@@ -189,6 +192,15 @@
             case " ":
                 Shuffle();
                 break;
+            case "p":
+            case "P":
+                await SpeakAsync();
+                break;
         }
+    }
+
+    private async Task SpeakAsync()
+    {
+        await JS.InvokeVoidAsync("speakDutch", CurrentWord.Dutch);
     }
 }

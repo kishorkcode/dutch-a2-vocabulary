@@ -25,6 +25,15 @@
         <a class="dismiss">&#10006;</a>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script>
+        window.speakDutch = function (text) {
+            if (!window.speechSynthesis) return;
+            window.speechSynthesis.cancel();
+            var utt = new SpeechSynthesisUtterance(text);
+            utt.lang = 'nl-NL';
+            window.speechSynthesis.speak(utt);
+        };
+    </script>
 </body>
 
 </html>
